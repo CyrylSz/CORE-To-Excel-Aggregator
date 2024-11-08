@@ -17,7 +17,7 @@ Organize your research papers into a custom data hub! Easily combine complex CSV
 ![ss2](/src/screenshots/ss2.png)
 
 ## Contents:
-* Merging all lines into one and fixing formatting issues.
+* Merging all files into one and fixing formatting issues.
 * Deleting redundant research papers from the list.
 * Packaging IDs into links for improved usability.
 * Dividing each row into 6 parts with 5 specified separators.
