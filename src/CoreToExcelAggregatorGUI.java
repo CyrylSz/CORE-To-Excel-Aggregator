@@ -22,7 +22,7 @@ public class CoreToExcelAggregatorGUI {
         gbc.insets = new Insets(10, 10, 10, 10);
 
         // Title label
-        JLabel titleLabel = new JLabel("CORE -> Excel", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("CORE → Excel", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -134,6 +134,19 @@ public class CoreToExcelAggregatorGUI {
         frame.add(buttonPanel, gbc);
 
         frame.setVisible(true);
+
+        String currentDir = new File("").getAbsolutePath();
+        File coreDataFolder = new File(currentDir, "CORE-Data");
+        if (coreDataFolder.exists() && coreDataFolder.isDirectory()) {
+            dataFolderPath = coreDataFolder.getAbsolutePath();
+            dataFolderPathField.setText(dataFolderPath);
+        }
+        File coreOutputFolder = new File(currentDir, "Excel-Output");
+        if (coreOutputFolder.exists() && coreOutputFolder.isDirectory()) {
+            outputFolderPath = coreOutputFolder.getAbsolutePath();
+            outputFolderPathField.setText(outputFolderPath);
+        }
+        checkStartButtonState(dataFolderPathField, outputFolderPathField, startProgramButton);
 
         // manually validate folder paths and enable start button
         dataFolderPathField.addKeyListener(new KeyAdapter() {

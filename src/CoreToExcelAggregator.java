@@ -33,6 +33,21 @@ public class CoreToExcelAggregator {
         Files.deleteIfExists(outputFolder.toPath().resolve("dataDefault.txt"));
         Files.deleteIfExists(outputFolder.toPath().resolve("dataFixed.txt"));
         Files.deleteIfExists(outputFolder.toPath().resolve("dataUnique.txt"));
+
+        File[] files = dataFolder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(".csv.txt")) {
+                    if (file.delete()) {
+                        System.out.println("Deleted: " + file.getName());
+                    } else {
+                        System.out.println("Failed to delete: " + file.getName());
+                    }
+                }
+            }
+        } else {
+            System.out.println("The folder is empty or an error occurred.");
+        }
     }
     private static void convertFilesToTxt(File dataFolder) {
         File[] files = dataFolder.listFiles((dir, name) -> !name.endsWith(".txt"));
