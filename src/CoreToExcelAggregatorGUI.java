@@ -33,7 +33,7 @@ public class CoreToExcelAggregatorGUI {
         JPanel separatorPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         separatorPanel.setBackground(new Color(0xb6ccc9));
         JLabel separatorLabel = new JLabel("Excel Separator:");
-        JTextField separatorTextField = new JTextField("|", 4);
+        JTextField separatorTextField = new JTextField("||", 4);
         separatorPanel.add(separatorLabel);
         separatorPanel.add(separatorTextField);
         gbc.gridx = 0;

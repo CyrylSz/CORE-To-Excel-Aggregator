@@ -3,7 +3,7 @@ import java.nio.file.*;
 import java.util.*;
 
 public class CoreToExcelAggregator {
-    static String separator = "|";
+    static String separator = "||";
     static final String HEADER = "\"workID\",\"oaiID\",\"doi\",\"title\",\"authors\",\"createdDate\"";
 
     public static void process(String dataFolderPath, String outputFolderPath) throws IOException {
@@ -173,6 +173,9 @@ public class CoreToExcelAggregator {
 
         try (BufferedReader reader = new BufferedReader(new FileReader(inputFile));
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+
+            writer.write("Link" + separator + "workID" + separator + "oaiID" + separator + "Title" + separator + "Authors" + separator + "Publication");
+            writer.newLine();
 
             String line;
             while ((line = reader.readLine()) != null) {
