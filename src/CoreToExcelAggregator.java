@@ -48,6 +48,8 @@ public class CoreToExcelAggregator {
         } else {
             System.out.println("The folder is empty or an error occurred.");
         }
+
+        renameFilesAlphabetically(dataFolder);
     }
     private static void convertFilesToTxt(File dataFolder) {
         File[] files = dataFolder.listFiles((dir, name) -> !name.endsWith(".txt"));
@@ -94,9 +96,8 @@ public class CoreToExcelAggregator {
                         writer.write(line);
                         writer.newLine();
                     }
-                    writer.newLine(); // newline between files
+                    writer.newLine();
                 }
-                //System.out.println("Files combined successfully into " + inputFile.getName());
             } catch (IOException e) {
                 System.out.println("An error occurred: " + e.getMessage());
             }
@@ -236,4 +237,39 @@ public class CoreToExcelAggregator {
 
         return formattedNames;
     }
+    private static void renameFilesAlphabetically(File dataFolder) {
+        File[] files = dataFolder.listFiles((dir, name) -> !name.endsWith(".txt"));
+
+        if (files != null) {
+            Arrays.sort(files, Comparator.comparing(File::getName));
+
+            int counter = 1;
+            for (File file : files) {
+                if (file.isFile()) {
+                    String extension = getFileExtension(file);
+
+                    String newFileName = counter + extension;
+                    File newFile = new File(dataFolder, newFileName);
+
+                    if (file.renameTo(newFile)) {
+                        System.out.println("Renamed: " + file.getName() + " to " + newFileName);
+                        counter++;
+                    } else {
+                        System.out.println("Failed to rename: " + file.getName());
+                    }
+                }
+            }
+        } else {
+            System.out.println("The folder is empty or an error occurred.");
+        }
+    }
+    private static String getFileExtension(File file) {
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf(".");
+        if (dotIndex > 0) {
+            return fileName.substring(dotIndex);
+        }
+        return "";
+    }
+
 }
