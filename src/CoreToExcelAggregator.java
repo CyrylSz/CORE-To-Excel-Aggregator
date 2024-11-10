@@ -1,11 +1,15 @@
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.Function;
+import java.util.regex.*;
 
 public class CoreToExcelAggregator {
-    static String separator = "||";
+    static String separator = "|";
     static final String HEADER = "\"workID\",\"oaiID\",\"doi\",\"title\",\"authors\",\"createdDate\"";
-
+    public static int duplicateLineCount = 0;
+    public static int forceFixCount = 0;
+    public static int lineCount = 0;
     public static void process(String dataFolderPath, String outputFolderPath) throws IOException {
         File dataFolder = new File(dataFolderPath);
         File outputFolder = new File(outputFolderPath);
@@ -47,6 +51,12 @@ public class CoreToExcelAggregator {
             }
         } else {
             System.out.println("The folder is empty or an error occurred.");
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(outputFile))) {
+            while (reader.readLine() != null) {
+                lineCount++;
+            }
         }
 
         renameFilesAlphabetically(dataFolder);
@@ -156,11 +166,15 @@ public class CoreToExcelAggregator {
                 if (uniqueLines.stream().noneMatch(existingLine -> existingLine.startsWith(uniqueID + ","))) {
                     uniqueLines.add(line);
                 }
-                else System.out.println("Duplicates of ID:" + uniqueID + " removed");
+                else {
+                    System.out.println("Duplicates of ID:" + uniqueID + " removed");
+                    duplicateLineCount++;
+                }
             }
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile))) {
                 for (String uniqueLine : uniqueLines) {
-                    bw.write(uniqueLine);
+                    String modifiedLine = uniqueLine.replace(separator, "I");
+                    bw.write(modifiedLine);
                     bw.newLine();
                 }
             }
@@ -169,6 +183,7 @@ public class CoreToExcelAggregator {
         }
         return outputFile;
     }
+
 
     private static void mainTransformation(File inputFile, File outputFile) throws IOException {
 
@@ -180,15 +195,72 @@ public class CoreToExcelAggregator {
 
             String line;
             while ((line = reader.readLine()) != null) {
-//                System.out.println("Original line: " + line);
-                String[] parts = splitOutsideQuotesAndBrackets(line);
-//                System.out.println("Parts after split: ");
-//                for (int i=0; i< parts.length; i++)System.out.println(parts[i]);
 
-//                System.out.println("parts.lenght=" + parts.length);
-                if (parts.length < 6) {
-                    System.out.println("Invalid line format, skipping line: " + line + " | parts.lenght=" + parts.length);
-                    continue;
+                String[] parts = splitOutsideQuotesAndBrackets(line);
+
+                if (parts.length != 6) {
+                    System.out.println("-----------------------");
+                    System.out.println("Invalid line format: " + line + " | parts.length=" + parts.length);
+                    System.out.println("Parts after split: ");
+                    for (String part : parts) System.out.println(part);
+
+                    // FORCE FIX
+                    Function<String, String[]> forceFixLine = badLine -> {
+                        String validTitlePattern = "(?<=,)(\"[^\"]*\")(?=,)";
+                        Pattern pattern = Pattern.compile(validTitlePattern);
+                        Matcher matcher = pattern.matcher(badLine);
+
+                        String[] fixedParts = new String[6];
+                        Arrays.fill(fixedParts, "");
+                        fixedParts[3] = "No Title: This line contained unsafe characters for processing and was fixed by force!";
+                        StringBuilder concatenatedStrings = new StringBuilder();
+
+                        while (matcher.find()) {
+                            String part = matcher.group(1).replaceAll("^\"|\"$", "").replace("\\\"", "\"");
+                            if (!concatenatedStrings.isEmpty()) {
+                                concatenatedStrings.append(" ");
+                            }
+                            concatenatedStrings.append(part.replace(",", " "));
+                        }
+
+                        fixedParts[4] = !concatenatedStrings.isEmpty() ? concatenatedStrings.toString() : "Nobody";
+
+                        Pattern numberPattern = Pattern.compile("^([^,]+)(?=,)");
+                        Matcher numberMatcher = numberPattern.matcher(badLine);
+                        if (numberMatcher.find()) {
+                            fixedParts[0] = numberMatcher.group(1);
+                        } else {
+                            fixedParts[0] = "0";
+                        }
+                        Function<String, Boolean> isValidDateTime = dateTime -> dateTime.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}");
+                        Function<String, String> extractDateTime = lineToSearch -> {
+                            String dateTimePattern = "(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})";
+                            Pattern datePattern = Pattern.compile(dateTimePattern);
+                            Matcher dateMatcher = datePattern.matcher(lineToSearch);
+                            if (dateMatcher.find()) {
+                                return dateMatcher.group(1);
+                            }
+                            return null;
+                        };
+                        if (fixedParts[5] != null && !isValidDateTime.apply(fixedParts[5])) {
+                            String dateTime = extractDateTime.apply(badLine);
+                            if (dateTime != null) {
+                                fixedParts[5] = dateTime;
+                            } else {
+                                fixedParts[5] = "0000-00-00T00:00:00";
+                            }
+                        } else if (fixedParts[5] == null) {
+                            fixedParts[5] = "0000-00-00T00:00:00";
+                        }
+
+                        return fixedParts;
+                    };
+
+                    parts = forceFixLine.apply(line);
+                    forceFixCount++;
+
+                    System.out.println("Parts after FORCE FIX:");
+                    for (String part : parts) System.out.println(part);
                 }
 
                 String idNumber = parts[0];
@@ -203,14 +275,18 @@ public class CoreToExcelAggregator {
 
                 // Concatenate parts
                 transformedLine += separator + string0 + separator + string1 + separator + string2 + separator + formattedNames + separator + timestamp;
-
-                writer.write(transformedLine);
+                String decodedLine = decodeUnicodeInString(transformedLine);
+                writer.write(decodedLine);
                 writer.newLine();
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public static String decodeUnicodeInString(String input) {
+        return Pattern.compile("\\\\u([0-9a-fA-F]{4})")
+                .matcher(input)
+                .replaceAll(match -> String.valueOf((char) Integer.parseInt(match.group(1), 16)));
     }
 
     private static String[] splitOutsideQuotesAndBrackets(String line) {
@@ -232,7 +308,7 @@ public class CoreToExcelAggregator {
         }
 
         String formattedNames = String.join(" ", nameParts);
-        String trimmed = formattedNames.substring(2, formattedNames.length() - 2);
+        String trimmed = formattedNames.length() >=4 ? formattedNames.substring(2, formattedNames.length() - 2) : "Nobody";
         formattedNames = trimmed.replaceAll("\"\"", ", ");
 
         return formattedNames;

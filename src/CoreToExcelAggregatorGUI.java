@@ -33,7 +33,7 @@ public class CoreToExcelAggregatorGUI {
         JPanel separatorPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         separatorPanel.setBackground(new Color(0xb6ccc9));
         JLabel separatorLabel = new JLabel("Excel Separator:");
-        JTextField separatorTextField = new JTextField("||", 4);
+        JTextField separatorTextField = new JTextField(CoreToExcelAggregator.separator, 4);
         separatorPanel.add(separatorLabel);
         separatorPanel.add(separatorTextField);
         gbc.gridx = 0;
@@ -116,8 +116,18 @@ public class CoreToExcelAggregatorGUI {
             public void actionPerformed(ActionEvent e) {
                 CoreToExcelAggregator.separator = separatorTextField.getText().trim();
                 try {
+                    CoreToExcelAggregator.duplicateLineCount = 0;
+                    CoreToExcelAggregator.forceFixCount = 0;
+                    CoreToExcelAggregator.lineCount = 0;
+
                     CoreToExcelAggregator.process(dataFolderPath, outputFolderPath);
-                    JOptionPane.showMessageDialog(frame, "Process completed.");
+
+                    String message = "<html>" +
+                            "Amount: <font size='+1'>" + (CoreToExcelAggregator.lineCount - 1) + " Papers!</b></font><br>" +
+                            "Duplicate Papers Removed: " + CoreToExcelAggregator.duplicateLineCount + "<br>" +
+                            "Line Fixes By Force: " + CoreToExcelAggregator.forceFixCount + "</html>";
+                    JOptionPane.showMessageDialog(frame, message, "Process completed.", JOptionPane.INFORMATION_MESSAGE);
+
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Error during transformation: " + ex.getMessage());
                 }
@@ -128,9 +138,7 @@ public class CoreToExcelAggregatorGUI {
         buttonGbc.gridwidth = 2;
         buttonPanel.add(startProgramButton, buttonGbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
+        gbc.gridy = 4;
         frame.add(buttonPanel, gbc);
 
         frame.setVisible(true);
