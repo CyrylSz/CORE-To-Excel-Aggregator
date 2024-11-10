@@ -4,7 +4,7 @@ Organize your research papers into a personal data hub! Easily combine complex C
 ![ss1](/src/screenshots/ss1.png)
    
 ## How to Use:
-1. [Download the contents of this folder](CORE-To-Excel).
+1. [Download CORE-To-Excel.zip from Releases and Extract All...](https://github.com/CyrylSz/CORE-To-Excel-Aggregator/releases/tag/core-ac-aggregator)
     * Note: Files will be processed alphabetically, so ensure the newest files are at the end to avoid incorrect checkbox assignments. Files will also be later automatically renamed in numerical order.
 2. Place all TXT or CSV files downloaded from https://core.ac.uk into the "CORE-Data" folder.
     * Note: The first line of each file should follow this format: 
