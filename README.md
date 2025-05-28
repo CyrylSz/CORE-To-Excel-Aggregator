@@ -30,5 +30,5 @@ Organize your research papers into a personal data hub! Easily combine complex C
 * Excel stuff: checkboxes, conditional formatting, macros...
 
 ## Why:
-* Why aggregate already aggregated data? Unfortunately, https://core.ac.uk allows you to download only a maximum of 1000 entries at once, and throwing everything into one folder makes the process much easier.
+* Why aggregate already aggregated data? Unfortunately, downloading from https://core.ac.uk is a rather primitive process, so the best approach is to skillfully filter the data and then throw everything into one folder, which makes the process much easier.
 * This specific CSV format also makes it almost impossible to load the data in a visually acceptable way using Excel alone.
